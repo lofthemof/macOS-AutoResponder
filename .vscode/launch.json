@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:macOS-AutoResponder}",
+            "name": "Debug AutoResponder",
+            "program": "${workspaceFolder:macOS-AutoResponder}/.build/debug/AutoResponder",
+            "preLaunchTask": "swift: Build Debug AutoResponder"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:macOS-AutoResponder}",
+            "name": "Release AutoResponder",
+            "program": "${workspaceFolder:macOS-AutoResponder}/.build/release/AutoResponder",
+            "preLaunchTask": "swift: Build Release AutoResponder"
+        }
+    ]
+}
