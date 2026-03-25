@@ -1,64 +1,70 @@
 # AutoResponder for iMessage
 
-A macOS SwiftPM tool that automatically replies to iMessages from specific contacts when a custom "Focus" flag is active. Supports per-contact custom messages and throttle control.
+A macOS menu bar app that auto-replies to iMessages from specific contacts.
 
 ## Features
 
-- Auto-reply only to contacts in the `autoReplyMap`.
-- Custom message per contact.
-- Throttles replies to avoid spamming the same contact.
-- Only responds to recent messages (`maxMessageAge` configurable).
-- Activation controlled by the presence of a `focus.flag` file.
+- Lives in the menu bar
+- Add/remove contacts with per-contact custom reply messages
+- Toggle active/inactive from the menu
+- Throttles replies per contact (default 30 min) to avoid spam
+- Only responds to recent messages (default 1 min age limit)
+- Recent activity log visible in menu
+- Built-in Full Disk Access prompt + deep-link to System Settings
 
 ---
 
 ## Prerequisites
 
 - macOS 13+
-- Swift 5.9+
-- Full Disk Access granted to Terminal/VS Code to access Messages database
-- Optional: Xcode if integrating with Focus/Shortcuts automation
+- Full Disk Access (the app guides you through granting it on first launch)
 
 ---
 
-## Setup & Usage
+## Installation
 
-### 1. Build the project
-Open Terminal in your project folder:
+1. Download `AutoResponder.dmg` from [Releases](../../releases)
+2. Open the DMG and drag AutoResponder to Applications
+3. Launch AutoResponder. A 💬 icon will appear in the menu bar
+4. On first launch the app will prompt for Full Disk Access and open System Settings automatically
+
+---
+
+## Build from Source
+
 ```bash
-swift build -c release
+git clone <repo>
+cd macOS-AutoResponder
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# Run directly (no .app build needed):
+.venv/bin/python3 main.py
+
+# Or build the .dmg:
+./build.sh          # outputs dist/AutoResponder.dmg
 ```
 
-### 2. Run the AutoResponder
-Open Terminal in your project folder:
-```bash
-swift run
-```
-The program will monitor the Messages database.
-It only replies when focus.flag exists in the project folder.
+> When running from Terminal, grant Full Disk Access to **Terminal** (not AutoResponder) in System Settings.
 
-### 3. Activate / Deactivate the auto-responder manually
-Enable auto-reply (Focus ON, in your project directory):
-```bash
-touch focus.flag
-```
-Disable auto-reply (Focus OFF, in your project directory):
-```base
-rm focus.flag
-```
+---
 
-### 4. Customize contacts and messages
-In `main.swift`:
-```swift
-let autoReplyMap: [String: String] = [
-    "+11234567890": "Example response: Hey, I'm away right now! Will get back to you soon.",
-    "friend@example.com": "Sorry, I’m driving. Will reply soon."
-]
-```
-- Key: Contact's phone number or Apple ID
-- Value: Message to send.
+## Usage
 
-### 5. Adjust behavior (optional)
-- `throttleSeconds` — minimum time between replies to the same contact.
-- `pollInterval` — how often the program checks for new messages.
-- `maxMessageAge` — ignore messages older than this (in seconds).
+- Click 💬 in the menu bar
+- **Add Contact…** → enter a phone number or Apple ID → enter a reply message
+- Click a contact to remove it
+- Toggle **Active / Inactive** to pause auto-replies
+- **Full Disk Access…** → opens System Settings if you need to re-grant access
+
+---
+
+## Configuration (source only)
+
+Edit the constants at the top of `main.py`:
+
+| Constant | Default | Description |
+|---|---|---|
+| `THROTTLE_SECONDS` | 1800 (30 min) | Min time between replies to the same contact |
+| `POLL_INTERVAL` | 2 s | How often the Messages DB is checked |
+| `MAX_MESSAGE_AGE` | 60 s | Ignore messages older than this |
