@@ -1,5 +1,9 @@
 .DS_Store
+.venv/
 .vscode/
 __pycache__/
 *.pyc
 state.json
+autoresponder.log
+build/
+dist/

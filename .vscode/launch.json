@@ -5,6 +5,7 @@
             "request": "launch",
             "name": "Run AutoResponder",
             "program": "${workspaceFolder}/main.py",
+            "python": "${workspaceFolder}/.venv/bin/python3",
             "console": "integratedTerminal"
         }
     ]
