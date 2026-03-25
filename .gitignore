@@ -1,8 +1,6 @@
 .DS_Store
-/.build
-/Packages
-xcuserdata/
-DerivedData/
-.swiftpm/configuration/registries.json
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-.netrc
+.vscode/
+__pycache__/
+*.pyc
+focus.flag
+last_rowid.txt
