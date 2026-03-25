@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import os
 import sqlite3
 import subprocess
@@ -10,12 +11,11 @@ from datetime import datetime, timezone
 # Config
 DB_PATH = os.path.expanduser("~/Library/Messages/chat.db")
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-LAST_ROW_FILE = os.path.join(PROJECT_DIR, "last_rowid.txt")
-ACTIVE_FLAG_FILE = os.path.join(PROJECT_DIR, "focus.flag")
+STATE_FILE = os.path.join(PROJECT_DIR, "state.json")
 
 # Insert contacts here, as well as the autoresponse you want to give to them (phone or Apple ID)
 AUTO_REPLY_MAP = {
-    "+11234567890": "Example response: Hey, I'm away right now! Will get back to you soon.",
+    "+15166679412": "Example response: Hey, I'm away right now! Will get back to you soon.",
     "friend@example.com": "Sorry, I'm driving. Will reply soon.",
 }
 
@@ -28,21 +28,17 @@ MAX_MESSAGE_AGE = 60 * 1
 IMESSAGE_EPOCH = datetime(2001, 1, 1, tzinfo=timezone.utc).timestamp()
 
 
-def read_last_row_id():
+def read_state():
     try:
-        with open(LAST_ROW_FILE) as f:
-            return int(f.read().strip())
-    except (FileNotFoundError, ValueError):
-        return 0
+        with open(STATE_FILE) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"active": True, "last_rowid": 0}
 
 
-def write_last_row_id(row_id):
-    with open(LAST_ROW_FILE, "w") as f:
-        f.write(str(row_id))
-
-
-def is_responder_active():
-    return os.path.exists(ACTIVE_FLAG_FILE)
+def write_state(state):
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f, indent=2)
 
 
 def run_applescript(script_text):
@@ -106,19 +102,23 @@ def main():
 
     conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
 
-    last_row = read_last_row_id()
+    state = read_state()
+    last_row = state.get("last_rowid", 0)
+
     if last_row == 0:
         print("First run: starting at current max ROWID (no history).")
         last_row = latest_row_id(conn)
-        write_last_row_id(last_row)
+        state["last_rowid"] = last_row
+        write_state(state)
 
     last_reply_time = None
 
     print(f"Watching contacts: {', '.join(AUTO_REPLY_MAP.keys())}")
-    print(f"AutoResponder active: {is_responder_active()}")
+    print(f"AutoResponder active: {state.get('active', True)}")
 
     while True:
-        if not is_responder_active():
+        state = read_state()
+        if not state.get("active", True):
             time.sleep(POLL_INTERVAL)
             continue
 
@@ -130,7 +130,8 @@ def main():
             if now - message_ts > MAX_MESSAGE_AGE:
                 print(f"[{datetime.now()}] Ignored old message from {sender or 'unknown'}")
                 last_row = row_id
-                write_last_row_id(last_row)
+                state["last_rowid"] = last_row
+                write_state(state)
                 continue
 
             if sender in AUTO_REPLY_MAP:
@@ -147,7 +148,8 @@ def main():
                 print(f"[{datetime.now()}] Ignored message from {sender}.")
 
             last_row = row_id
-            write_last_row_id(last_row)
+            state["last_rowid"] = last_row
+            write_state(state)
 
         time.sleep(POLL_INTERVAL)
 
